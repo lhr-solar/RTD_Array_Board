@@ -2,7 +2,7 @@
  * Arduino driver library for the MAX31865.
  *
  * Copyright (C) 2015 Ole Wolf <wolf@blazingangles.com>
- *
+ * Edited by Elijah Pustilnik for Longhorn Racing Solar, Spring 2022
  *
  * Wire the circuit as follows, assuming that level converters have been
  * added for the 3.3V signals:
@@ -28,7 +28,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  
-  Edited by Elijah Pustilnik, Spring 2022
+  
 **************************************************************************/
 
 //Max31865 datasheet located at https://datasheets.maximintegrated.com/en/ds/MAX31865.pdf
