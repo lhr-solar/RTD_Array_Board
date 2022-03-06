@@ -5,7 +5,6 @@
 MAX31865_RTD rtd0(MAX31865_RTD::RTD_PT100, D11, D12, D13, A1); //miso = master input slave output (SDI on nucleo), 
 //RTD parameters: (ptd_type type,PinName mosi, PinName miso, PinName sclk, PinName nss); nss is chip select, negative logic
 // main() runs in its own thread in the OS
-//RTD1 ADC is shorted
 
 MAX31865_RTD rtd1(MAX31865_RTD::RTD_PT100, D11, D12, D13, A0); //miso = master input slave output (SDI on nucleo), 
 MAX31865_RTD rtd2(MAX31865_RTD::RTD_PT100, D11, D12, D13, D8); //miso = master input slave output (SDI on nucleo),
@@ -26,36 +25,20 @@ int main()
 
     rtd0.configure( true, true, false, false, MAX31865_FAULT_DETECTION_NONE,
                    true, true, 0x0000, 0x7fff );
-    osDelay(200);
-
     rtd1.configure( true, true, false, false, MAX31865_FAULT_DETECTION_NONE,
                    true, true, 0x0000, 0x7fff );
-    osDelay(200);
-
     // rtd2.configure( true, true, false, false, MAX31865_FAULT_DETECTION_NONE,
     //                true, true, 0x0000, 0x7fff );
-    osDelay(200);
-
     rtd3.configure( true, true, false, false, MAX31865_FAULT_DETECTION_NONE,
                    true, true, 0x0000, 0x7fff );
-    osDelay(200);
-
     rtd4.configure( true, true, false, false, MAX31865_FAULT_DETECTION_NONE,
                    true, true, 0x0000, 0x7fff );
-    osDelay(200);
-
-    rtd5.configure( true, true, false, false, MAX31865_FAULT_DETECTION_NONE,
+   rtd5.configure( true, true, false, false, MAX31865_FAULT_DETECTION_NONE,
                    true, true, 0x0000, 0x7fff );
-    osDelay(200);
-
     rtd6.configure( true, true, false, false, MAX31865_FAULT_DETECTION_NONE,
                    true, true, 0x0000, 0x7fff );
-    osDelay(200);
-
     rtd7.configure( true, true, false, false, MAX31865_FAULT_DETECTION_NONE,
                    true, true, 0x0000, 0x7fff );
-    osDelay(200);               
-    
     while (1) {
         
  
@@ -113,14 +96,14 @@ int main()
         double resistance3 = rtd3.resistance();
         printf("Resistance3 is %f \n", resistance3);
 
-        rtd4.read_all( );
+        //rtd4.read_all( );
         
         
-        // rtd4.read_all( );   //rtd4 is good
-        // double temperature4 = rtd4.temperature( );
-        // printf( " T4 = %f deg C \n\r",temperature4);
-        // double resistance4 = rtd4.resistance();
-        // printf("Resistance4 is %f \n", resistance4);
+        rtd4.read_all( );   //rtd4 is good
+        double temperature4 = rtd4.temperature( );
+        printf( " T4 = %f deg C \n\r",temperature4);
+        double resistance4 = rtd4.resistance();
+        printf("Resistance4 is %f \n", resistance4);
 
         
         // rtd5 is good
@@ -150,3 +133,4 @@ int main()
  
     }
 }
+
