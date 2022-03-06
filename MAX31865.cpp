@@ -211,7 +211,7 @@ uint8_t MAX31865_RTD::read_all( )
   //00 = configuration register, 01 = MSBs of resistance value, 02 = LSBs of
   //Registers available on datasheet at https://datasheets.maximintegrated.com/en/ds/MAX31865.pdf
   //The chip then automatically increments to read from the next register
-
+  spi.select();
   /* Start the read operation. */
   nss = 0; //tell the MAX31865 we want to start reading, waiting for starting address to be written
   /* Tell the MAX31865 that we want to read, starting at register 0. */
@@ -255,7 +255,7 @@ uint8_t MAX31865_RTD::read_all( )
   if(    ( this->measured_resistance == 0 )
       || ( this->measured_status != 0 ) )
   {
-    //reconfigure( );
+    reconfigure( );
   }
 
   return( status( ) );
