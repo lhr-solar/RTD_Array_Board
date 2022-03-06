@@ -97,7 +97,6 @@ void MAX31865_RTD::configure( bool v_bias, bool conversion_mode, bool one_shot,
 {
   uint8_t control_bits = 0;
    nss = 1;
-   osDelay(1);
   /* Assemble the control bit mask. */
   control_bits |= ( v_bias ? 0x80 : 0 );
   control_bits |= ( conversion_mode ? 0x40 : 0 );
@@ -129,7 +128,7 @@ void MAX31865_RTD::reconfigure( )
 {
   /* Write the configuration to the MAX31865. */
 
-  
+  spi.select();
 
   nss = 0;      //Chip select is negative logic;
   wait_us(100);
@@ -147,6 +146,7 @@ void MAX31865_RTD::reconfigure( )
   spi.write(   this->configuration_low_threshold        & 0x00ff );
   nss = 1;
   
+  spi.deselect();
 }
 
 
@@ -196,7 +196,7 @@ double MAX31865_RTD::temperature( ) const
  */
 uint8_t MAX31865_RTD::read_all( )
 {
-  uint16_t combined_bytes;
+  uint16_t combined_bytes = 0;
 
   //SPI clock polarity/phase (CPOL & CPHA) is set to 11 in spi.format (bit 1 = polarity, bit 0 = phase, see SPI.h)
   //polarity of 1 indicates that the SPI reading idles high (default setting is 1; polarity of 0 means idle is 0)
@@ -211,7 +211,16 @@ uint8_t MAX31865_RTD::read_all( )
   //00 = configuration register, 01 = MSBs of resistance value, 02 = LSBs of
   //Registers available on datasheet at https://datasheets.maximintegrated.com/en/ds/MAX31865.pdf
   //The chip then automatically increments to read from the next register
+  
+  // when reading from multiple chips sequentially, the SPI connection for a chip must be specified before the spi.write function executes.
+  // if spi.select() has not been executed beforehand, the SPI connection between the ADC and microcontroller will re-initialize/transfer control to the current ADC as soon as
+  // it calls the first SPI write after nss=0. However, transferring SPI control causes the clock to go low to re-initialize the SPI connection/handshake (this is while nss = 0), 
+  // so the microcontroller sees the SPI re-initialization as one clock cycle.
+  // the re-initialization of the SPI connection to the given ADC can be done before nss = 0 by executing spi.select() or performing spi.write(0x00).
+  // example: https://i.stack.imgur.com/o3KoR.jpg (erroneous low at start)
+  // see explanation at https://stackoverflow.com/questions/71366463/spi-extra-clock-cycle-over-communication-between-stm32-nucleo-l432kc-and-max3186
   spi.select();
+  
   /* Start the read operation. */
   nss = 0; //tell the MAX31865 we want to start reading, waiting for starting address to be written
   /* Tell the MAX31865 that we want to read, starting at register 0. */
@@ -249,6 +258,8 @@ uint8_t MAX31865_RTD::read_all( )
 
     //set chip select to 1; chip stops incrementing registers when chip select is high; ends read cycle
   nss = 1;
+  //relingquish SPI connection when chip is done reading
+  spi.deselect();
 
   /* Reset the configuration if the measured resistance is
      zero or a fault occurred. */
