@@ -67,7 +67,7 @@ MAX31865_RTD::MAX31865_RTD( ptd_type type,PinName mosi, PinName miso, PinName sc
   //pinMode( this->cs_pin, OUTPUT );
 
   /* Pull the CS pin high to avoid conflicts on SPI bus. */
-  //nss = 1;
+//   nss = 1;
   //nss = type;
 }
 
@@ -97,13 +97,14 @@ void MAX31865_RTD::configure( bool v_bias, bool conversion_mode, bool one_shot,
 {
   uint8_t control_bits = 0;
    nss = 1;
+   osDelay(1);
   /* Assemble the control bit mask. */
   control_bits |= ( v_bias ? 0x80 : 0 );
   control_bits |= ( conversion_mode ? 0x40 : 0 );
   control_bits |= ( one_shot ? 0x20 : 0 );
   control_bits |= ( three_wire ? 0x10 : 0 );
   control_bits |= fault_cycle & 0b00001100;
-  control_bits |= ( fault_clear ? 0x02 : 0 );
+  control_bits |= ( fault_clear ? 0x02 : 0 );   //fault clear auto resets to 0 upon each new cycle
   control_bits |= ( filter_50hz ? 0x01 : 0 );
 
   /* Store the control bits and the fault threshold limits for reconfiguration
@@ -122,6 +123,8 @@ void MAX31865_RTD::configure( bool v_bias, bool conversion_mode, bool one_shot,
  * Reconfigure the MAX31865 by writing the stored control bits and the stored fault
  * threshold values back to the chip.
  */ 
+
+ //must edit reconfigure to be 2, 3, or 4-wire mode
 void MAX31865_RTD::reconfigure( )
 {
   /* Write the configuration to the MAX31865. */
@@ -129,9 +132,9 @@ void MAX31865_RTD::reconfigure( )
   
 
   nss = 0;      //Chip select is negative logic;
-  //wait_us(100);
+  wait_us(100);
   spi.write( 0x80 );
-  spi.write( this->configuration_control_bits );
+  spi.write( this->configuration_control_bits);
   nss = 1;
 
   /* Write the threshold values. */
@@ -212,6 +215,8 @@ uint8_t MAX31865_RTD::read_all( )
   /* Start the read operation. */
   nss = 0; //tell the MAX31865 we want to start reading, waiting for starting address to be written
   /* Tell the MAX31865 that we want to read, starting at register 0. */
+  
+  
   spi.write( 0x00 ); //start reading values starting at register 00h
 
   /* Read the MAX31865 registers in the following order:
@@ -221,6 +226,7 @@ uint8_t MAX31865_RTD::read_all( )
        Low Fault Threshold (05 = MSBs, 06 = LSBs)
        Fault Status (07) */
     
+    this->measured_resistance = 0;
 
   this->measured_configuration = spi.write( 0x00 ); //read from register 00
     //automatic increment to register 01
@@ -249,7 +255,7 @@ uint8_t MAX31865_RTD::read_all( )
   if(    ( this->measured_resistance == 0 )
       || ( this->measured_status != 0 ) )
   {
-    reconfigure( );
+    //reconfigure( );
   }
 
   return( status( ) );
