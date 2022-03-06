@@ -132,20 +132,21 @@ void MAX31865_RTD::reconfigure( )
 
   nss = 0;      //Chip select is negative logic;
   wait_us(100);
-  spi.write( 0x80 );
+  spi.write( 0x80 );    //configuration write register is address 0x80
   spi.write( this->configuration_control_bits);
   nss = 1;
 
   /* Write the threshold values. */
   nss = 0;
  // wait_us(100);
-  spi.write( 0x83 );
-  spi.write( ( this->configuration_high_threshold >> 8 ) & 0x00ff );
-  spi.write(   this->configuration_high_threshold        & 0x00ff );
-  spi.write( ( this->configuration_low_threshold >> 8 ) & 0x00ff );
-  spi.write(   this->configuration_low_threshold        & 0x00ff );
+  spi.write( 0x83 );    //threshold write registers start from 0x83
+  spi.write( ( this->configuration_high_threshold >> 8 ) & 0x00ff ); //MSBs of high threshold get written to MSB high register
+  spi.write(   this->configuration_high_threshold        & 0x00ff );    //LSBs of high threshold get written to MSB high register
+  spi.write( ( this->configuration_low_threshold >> 8 ) & 0x00ff );     //MSBs of low threshold get written to MSB high register
+  spi.write(   this->configuration_low_threshold        & 0x00ff );     //lSBs of low threshold get written to MSB high register
   nss = 1;
   
+  //relinquish control of SPI bus
   spi.deselect();
 }
 
@@ -216,7 +217,7 @@ uint8_t MAX31865_RTD::read_all( )
   // if spi.select() has not been executed beforehand, the SPI connection between the ADC and microcontroller will re-initialize/transfer control to the current ADC as soon as
   // it calls the first SPI write after nss=0. However, transferring SPI control causes the clock to go low to re-initialize the SPI connection/handshake (this is while nss = 0), 
   // so the microcontroller sees the SPI re-initialization as one clock cycle.
-  // the re-initialization of the SPI connection to the given ADC can be done before nss = 0 by executing spi.select() or performing spi.write(0x00).
+  // the re-initialization of the SPI connection to the given ADC can be done before nss = 0 by executing spi.select() or performing spi.write(0x00). (0x00 is an arbitrary value)
   // example: https://i.stack.imgur.com/o3KoR.jpg (erroneous low at start)
   // see explanation at https://stackoverflow.com/questions/71366463/spi-extra-clock-cycle-over-communication-between-stm32-nucleo-l432kc-and-max3186
   spi.select();
